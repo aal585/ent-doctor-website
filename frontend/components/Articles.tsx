@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar } from "lucide-react";
-import backend from "~backend/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "../hooks/useLanguage";
+import { getTranslation } from "../lib/i18n";
+import backend from "~backend/client";
+import { ArticleCard } from "./ArticleCard";
 import type { Article } from "~backend/doctor/types";
 
 export function Articles() {
   const { language } = useLanguage();
+  const t = (key: string) => getTranslation(key, language);
+
   const { data, isLoading } = useQuery({
     queryKey: ["articles", language],
     queryFn: () => backend.doctor.getArticles({ lang: language })
@@ -17,49 +20,78 @@ export function Articles() {
     return <div>Loading...</div>;
   }
 
+  // Get the latest article for the featured section
+  const featuredArticle = data?.articles[0];
+  const remainingArticles = data?.articles.slice(1);
+
   return (
     <section id="articles" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest Articles</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            {t("articles.title")}
+          </h2>
           <p className="text-lg text-gray-600">
-            Expert insights and medical advice from Dr. Sultan
+            {t("articles.subtitle")}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data?.articles.map((article: Article) => (
-            <Card key={article.id} className="overflow-hidden">
-              <CardHeader className="p-0">
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-full h-48 object-cover"
-                />
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex items-center text-sm text-gray-500 mb-3">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  {new Date(article.date).toLocaleDateString(
-                    language === "ar" ? "ar-AE" : "en-US"
-                  )}
+        {/* Featured Article */}
+        {featuredArticle && (
+          <div className="mb-12">
+            <ArticleCard article={featuredArticle} variant="featured" />
+          </div>
+        )}
+
+        {/* Article Categories and List */}
+        <Tabs defaultValue="recent" className="space-y-8">
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="recent">{t("articles.recent")}</TabsTrigger>
+              <TabsTrigger value="popular">{t("articles.popular")}</TabsTrigger>
+            </TabsList>
+            <Button variant="outline">
+              {t("articles.viewAll")}
+            </Button>
+          </div>
+
+          <TabsContent value="recent" className="m-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {remainingArticles?.map((article: Article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="popular" className="m-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {remainingArticles?.sort((a, b) => b.viewCount - a.viewCount)
+                .map((article: Article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Article Categories */}
+        <div className="mt-16">
+          <h3 className="text-xl font-semibold mb-6">{t("articles.categories")}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {["Patient Education", "Medical Advances", "Health Tips", "Case Studies"].map((category) => (
+              <Button
+                key={category}
+                variant="outline"
+                className="justify-start h-auto py-4 px-6"
+              >
+                <div>
+                  <p className="font-semibold">{category}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {data?.articles.filter(a => a.category === category).length} articles
+                  </p>
                 </div>
-                <CardTitle className="mb-3">{article.title}</CardTitle>
-                <p className="text-gray-600 mb-4">{article.summary}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {article.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full">Read More</Button>
-              </CardContent>
-            </Card>
-          ))}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
     </section>
