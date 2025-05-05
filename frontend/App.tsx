@@ -5,19 +5,26 @@ import { Hero } from "./components/Hero";
 import { About } from "./components/About";
 import { Services } from "./components/Services";
 import { Testimonials } from "./components/Testimonials";
+import { Articles } from "./components/Articles";
+import { FAQSection } from "./components/FAQ";
 import { Contact } from "./components/Contact";
 import { AppointmentForm } from "./components/AppointmentForm";
+import { useLanguage } from "./hooks/useLanguage";
 
 const queryClient = new QueryClient();
 
 function AppInner() {
+  const { language } = useLanguage();
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen bg-white ${language === 'ar' ? 'rtl' : 'ltr'}`}>
       <Navbar />
       <Hero />
       <About />
       <Services />
       <Testimonials />
+      <Articles />
+      <FAQSection />
       
       <section id="appointment" className="py-20">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">

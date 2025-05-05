@@ -5,6 +5,25 @@ export interface Doctor {
   specializations: string[];
   experience: number;
   imageUrl: string;
+  certificates: Certificate[];
+  procedures: Procedure[];
+}
+
+export interface Certificate {
+  id: string;
+  title: string;
+  institution: string;
+  year: number;
+  imageUrl: string;
+}
+
+export interface Procedure {
+  id: string;
+  title: string;
+  date: Date;
+  description: string;
+  mediaUrls: string[];
+  type: "image" | "video";
 }
 
 export interface Service {
@@ -20,6 +39,31 @@ export interface Testimonial {
   content: string;
   rating: number;
   date: Date;
+  verified: boolean;
+  procedureType?: string;
+  response?: {
+    content: string;
+    date: Date;
+  };
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  content: string;
+  summary: string;
+  author: string;
+  date: Date;
+  imageUrl: string;
+  tags: string[];
+  category: string;
+}
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
 }
 
 export interface AppointmentRequest {
@@ -30,4 +74,11 @@ export interface AppointmentRequest {
   alternateDate: Date;
   reason: string;
   isNewPatient: boolean;
+}
+
+export interface Translation {
+  [key: string]: {
+    en: string;
+    ar: string;
+  };
 }
