@@ -21,6 +21,39 @@ export const translations: Translation = {
   "hero.book": { en: "Book Appointment", ar: "حجز موعد" },
   "hero.learn": { en: "Learn More", ar: "اعرف المزيد" },
 
+  // Service Categories
+  "services.categories.ear": { en: "Ear Care", ar: "رعاية الأذن" },
+  "services.categories.nose": { en: "Nose & Sinus", ar: "الأنف والجيوب الأنفية" },
+  "services.categories.throat": { en: "Throat & Voice", ar: "الحنجرة والصوت" },
+  "services.categories.sleep": { en: "Sleep Medicine", ar: "طب النوم" },
+  "services.categories.pediatric": { en: "Pediatric ENT", ar: "أنف وأذن وحنجرة الأطفال" },
+
+  // Service Details
+  "service.benefits": { en: "Benefits", ar: "الفوائد" },
+  "service.benefits.description": { 
+    en: "Key advantages of this procedure",
+    ar: "المزايا الرئيسية لهذا الإجراء"
+  },
+  "service.procedure": { en: "Procedure Steps", ar: "خطوات الإجراء" },
+  "service.procedure.description": {
+    en: "What to expect during the procedure",
+    ar: "ما يمكن توقعه خلال الإجراء"
+  },
+  "service.recovery": { en: "Recovery Time", ar: "وقت التعافي" },
+  "service.preparation": { en: "Preparation", ar: "التحضير" },
+  "service.risks": { en: "Potential Risks", ar: "المخاطر المحتملة" },
+  "service.price": { en: "Price Range", ar: "نطاق السعر" },
+  "service.book": { en: "Book This Service", ar: "احجز هذه الخدمة" },
+  "service.results": { en: "Before & After Results", ar: "النتائج قبل وبعد" },
+  "service.results.description": {
+    en: "Real patient results from this procedure",
+    ar: "نتائج حقيقية للمرضى من هذا الإجراء"
+  },
+  "service.before": { en: "Before", ar: "قبل" },
+  "service.after": { en: "After", ar: "بعد" },
+  "service.learnMore": { en: "Learn More", ar: "اعرف المزيد" },
+  "services.all": { en: "All Services", ar: "جميع الخدمات" },
+
   // About Section
   "about.title": { en: "About Dr. Ahmed Sultan", ar: "عن الدكتور أحمد سلطان" },
   "about.experience": { en: "Years Experience", ar: "سنوات الخبرة" },
@@ -43,6 +76,10 @@ export const translations: Translation = {
   },
   "testimonials.verified": { en: "Verified Patient", ar: "مريض موثق" },
   "testimonials.procedure": { en: "Procedure", ar: "العملية" },
+  "testimonials.share": { en: "Share Your Experience", ar: "شارك تجربتك" },
+  "testimonials.rating": { en: "Rating", ar: "التقييم" },
+  "testimonials.write": { en: "Write a Review", ar: "اكتب تقييماً" },
+  "testimonials.submit": { en: "Submit Review", ar: "إرسال التقييم" },
 
   // Articles Section
   "articles.title": { en: "Latest Articles", ar: "أحدث المقالات" },
@@ -51,6 +88,11 @@ export const translations: Translation = {
     ar: "رؤى خبير ونصائح طبية من الدكتور سلطان"
   },
   "articles.readMore": { en: "Read More", ar: "اقرأ المزيد" },
+  "articles.readTime": { en: "min read", ar: "دقائق قراءة" },
+  "articles.viewAll": { en: "View All Articles", ar: "عرض جميع المقالات" },
+  "articles.categories": { en: "Categories", ar: "التصنيفات" },
+  "articles.popular": { en: "Popular Articles", ar: "المقالات الشائعة" },
+  "articles.recent": { en: "Recent Articles", ar: "أحدث المقالات" },
 
   // FAQ Section
   "faq.title": { en: "Frequently Asked Questions", ar: "الأسئلة الشائعة" },
