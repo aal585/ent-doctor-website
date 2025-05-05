@@ -1,5 +1,5 @@
 import { api } from "encore.dev/api";
-import type { Doctor, Service } from "./types";
+import type { Doctor } from "./types";
 
 // Get doctor profile information
 export const getProfile = api<void, Doctor>(
@@ -54,41 +54,6 @@ export const getProfile = api<void, Doctor>(
           description: "Successful cochlear implant in a 5-year-old patient",
           mediaUrls: ["/videos/procedures/cochlear.mp4"],
           type: "video"
-        }
-      ]
-    };
-  }
-);
-
-// Get list of services offered
-export const getServices = api<void, { services: Service[] }>(
-  { method: "GET", path: "/doctor/services", expose: true },
-  async () => {
-    return {
-      services: [
-        {
-          id: "ear-treatment",
-          name: "Ear Treatment",
-          description: "Comprehensive diagnosis and treatment of ear conditions including hearing loss, infections, and balance disorders.",
-          imageUrl: "/images/ear-treatment.jpg"
-        },
-        {
-          id: "sinus-surgery",
-          name: "Sinus Surgery",
-          description: "Advanced surgical procedures for chronic sinusitis and nasal polyps using minimally invasive techniques.",
-          imageUrl: "/images/sinus-surgery.jpg"
-        },
-        {
-          id: "throat-disorders",
-          name: "Throat Disorders",
-          description: "Treatment of throat conditions including tonsillitis, voice disorders, and swallowing difficulties.",
-          imageUrl: "/images/throat-disorders.jpg"
-        },
-        {
-          id: "sleep-apnea",
-          name: "Sleep Apnea Treatment",
-          description: "Diagnosis and treatment of sleep-related breathing disorders and snoring.",
-          imageUrl: "/images/sleep-apnea.jpg"
         }
       ]
     };

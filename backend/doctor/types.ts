@@ -26,11 +26,44 @@ export interface Procedure {
   type: "image" | "video";
 }
 
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
 export interface Service {
   id: string;
   name: string;
   description: string;
   imageUrl: string;
+  category: ServiceCategory;
+}
+
+export interface ServiceDetail {
+  id: string;
+  serviceId: string;
+  title: string;
+  description: string;
+  benefits: string[];
+  procedureSteps: string[];
+  recoveryTime: string;
+  preparation: string[];
+  risks: string[];
+  imageUrls: string[];
+  videoUrl?: string;
+  priceRange: string;
+  results: ServiceResult[];
+}
+
+export interface ServiceResult {
+  id: string;
+  serviceId: string;
+  beforeImageUrl: string;
+  afterImageUrl: string;
+  description: string;
+  procedureDate: Date;
 }
 
 export interface Testimonial {
