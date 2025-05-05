@@ -2,7 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
+import { About } from "./components/About";
 import { Services } from "./components/Services";
+import { Testimonials } from "./components/Testimonials";
+import { Contact } from "./components/Contact";
 import { AppointmentForm } from "./components/AppointmentForm";
 
 const queryClient = new QueryClient();
@@ -12,7 +15,9 @@ function AppInner() {
     <div className="min-h-screen bg-white">
       <Navbar />
       <Hero />
+      <About />
       <Services />
+      <Testimonials />
       
       <section id="appointment" className="py-20">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,6 +30,8 @@ function AppInner() {
           <AppointmentForm />
         </div>
       </section>
+
+      <Contact />
 
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
