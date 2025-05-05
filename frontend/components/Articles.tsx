@@ -3,12 +3,14 @@ import { Calendar } from "lucide-react";
 import backend from "~backend/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "../hooks/useLanguage";
 import type { Article } from "~backend/doctor/types";
 
 export function Articles() {
+  const { language } = useLanguage();
   const { data, isLoading } = useQuery({
-    queryKey: ["articles"],
-    queryFn: () => backend.doctor.getArticles()
+    queryKey: ["articles", language],
+    queryFn: () => backend.doctor.getArticles({ lang: language })
   });
 
   if (isLoading) {
@@ -38,7 +40,9 @@ export function Articles() {
               <CardContent className="p-6">
                 <div className="flex items-center text-sm text-gray-500 mb-3">
                   <Calendar className="w-4 h-4 mr-2" />
-                  {new Date(article.date).toLocaleDateString()}
+                  {new Date(article.date).toLocaleDateString(
+                    language === "ar" ? "ar-AE" : "en-US"
+                  )}
                 </div>
                 <CardTitle className="mb-3">{article.title}</CardTitle>
                 <p className="text-gray-600 mb-4">{article.summary}</p>

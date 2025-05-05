@@ -1,0 +1,12 @@
+CREATE TABLE appointments (
+  id BIGSERIAL PRIMARY KEY,
+  patient_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  preferred_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  alternate_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  reason TEXT NOT NULL,
+  is_new_patient BOOLEAN NOT NULL DEFAULT TRUE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);

@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import backend from "~backend/client";
+import { useLanguage } from "../hooks/useLanguage";
+import { getTranslation } from "../lib/i18n";
 import {
   Accordion,
   AccordionContent,
@@ -9,9 +11,12 @@ import {
 import type { FAQ } from "~backend/doctor/types";
 
 export function FAQSection() {
+  const { language } = useLanguage();
+  const t = (key: string) => getTranslation(key, language);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["faqs"],
-    queryFn: () => backend.doctor.getFAQs()
+    queryKey: ["faqs", language],
+    queryFn: () => backend.doctor.getFAQs({ lang: language })
   });
 
   if (isLoading) {
@@ -31,10 +36,8 @@ export function FAQSection() {
     <section id="faq" className="py-20 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-          <p className="text-lg text-gray-600">
-            Find answers to common questions about our services, appointments, and procedures
-          </p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("faq.title")}</h2>
+          <p className="text-lg text-gray-600">{t("faq.subtitle")}</p>
         </div>
 
         <div className="space-y-8">
