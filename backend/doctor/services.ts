@@ -1,12 +1,20 @@
 import { api } from "encore.dev/api";
 
-export const test = api<void, { ok: boolean }>(
+// Define interface for response
+interface HelloResponse {
+  message: string;
+}
+
+// Basic endpoint with proper interface types
+export const hello = api<void, HelloResponse>(
   { 
     method: "GET",
-    path: "/test",
+    path: "/hello",
     expose: true
   },
   async () => {
-    return { ok: true };
+    return {
+      message: "Hello World"
+    };
   }
 );
