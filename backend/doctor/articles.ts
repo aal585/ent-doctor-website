@@ -2,48 +2,47 @@ import { api, APIError } from "encore.dev/api";
 import type { Article } from "./types";
 import { doctorDB } from "./db";
 
-interface ArticleRow {
-  id: string;
-  title_en: string;
-  title_ar: string;
-  content_en: string;
-  content_ar: string;
-  summary_en: string;
-  summary_ar: string;
-  author: string;
-  date: Date;
-  image_url: string;
-  tags: string[];
-  category: string;
-}
-
 // Get articles in specified language
 export const getArticles = api<{ lang: "en" | "ar" }, { articles: Article[] }>(
   { method: "GET", path: "/doctor/articles", expose: true },
   async (req) => {
+    if (!["en", "ar"].includes(req.lang)) {
+      throw APIError.invalidArgument("Invalid language specified");
+    }
+
     try {
-      const rows = await doctorDB.queryAll<ArticleRow>`
+      const rows = await doctorDB.queryAll`
         SELECT 
-          id::text, title_en, title_ar, content_en, content_ar,
-          summary_en, summary_ar, author, date, image_url,
-          tags, category
+          id::text,
+          title_${req.lang} as title,
+          content_${req.lang} as content,
+          summary_${req.lang} as summary,
+          author,
+          date,
+          image_url as "imageUrl",
+          tags,
+          category,
+          read_time_minutes as "readTimeMinutes",
+          view_count as "viewCount"
         FROM articles
         ORDER BY date DESC
       `;
 
-      const articles = rows.map(row => ({
-        id: row.id,
-        title: req.lang === "en" ? row.title_en : row.title_ar,
-        content: req.lang === "en" ? row.content_en : row.content_ar,
-        summary: req.lang === "en" ? row.summary_en : row.summary_ar,
-        author: row.author,
-        date: new Date(row.date),
-        imageUrl: row.image_url,
-        tags: row.tags,
-        category: row.category
-      }));
-
-      return { articles };
+      return {
+        articles: rows.map(row => ({
+          id: row.id,
+          title: row.title || '',
+          content: row.content || '',
+          summary: row.summary || '',
+          author: row.author,
+          date: new Date(row.date),
+          imageUrl: row.imageUrl,
+          tags: row.tags || [],
+          category: row.category,
+          readTimeMinutes: row.readTimeMinutes || 5,
+          viewCount: row.viewCount || 0
+        }))
+      };
     } catch (err) {
       console.error("Failed to fetch articles:", err);
       throw APIError.internal("Failed to fetch articles");
@@ -55,12 +54,24 @@ export const getArticles = api<{ lang: "en" | "ar" }, { articles: Article[] }>(
 export const getArticle = api<{ id: string; lang: "en" | "ar" }, Article>(
   { method: "GET", path: "/doctor/articles/:id", expose: true },
   async (req) => {
+    if (!["en", "ar"].includes(req.lang)) {
+      throw APIError.invalidArgument("Invalid language specified");
+    }
+
     try {
-      const row = await doctorDB.queryRow<ArticleRow>`
+      const row = await doctorDB.queryRow`
         SELECT 
-          id::text, title_en, title_ar, content_en, content_ar,
-          summary_en, summary_ar, author, date, image_url,
-          tags, category
+          id::text,
+          title_${req.lang} as title,
+          content_${req.lang} as content,
+          summary_${req.lang} as summary,
+          author,
+          date,
+          image_url as "imageUrl",
+          tags,
+          category,
+          read_time_minutes as "readTimeMinutes",
+          view_count as "viewCount"
         FROM articles
         WHERE id = ${req.id}::bigint
       `;
@@ -71,14 +82,16 @@ export const getArticle = api<{ id: string; lang: "en" | "ar" }, Article>(
 
       return {
         id: row.id,
-        title: req.lang === "en" ? row.title_en : row.title_ar,
-        content: req.lang === "en" ? row.content_en : row.content_ar,
-        summary: req.lang === "en" ? row.summary_en : row.summary_ar,
+        title: row.title || '',
+        content: row.content || '',
+        summary: row.summary || '',
         author: row.author,
         date: new Date(row.date),
-        imageUrl: row.image_url,
-        tags: row.tags,
-        category: row.category
+        imageUrl: row.imageUrl,
+        tags: row.tags || [],
+        category: row.category,
+        readTimeMinutes: row.readTimeMinutes || 5,
+        viewCount: row.viewCount || 0
       };
     } catch (err) {
       if (err instanceof APIError) throw err;

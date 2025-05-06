@@ -21,41 +21,7 @@ export const getProfile = api<void, Doctor>(
         "Pediatric ENT"
       ],
       experience: 15,
-      imageUrl: "/images/doctor-profile.jpg",
-      certificates: [
-        {
-          id: "cert1",
-          title: "Fellowship in Advanced Endoscopic Sinus Surgery",
-          institution: "Johns Hopkins Hospital",
-          year: 2010,
-          imageUrl: "/images/certificates/hopkins.jpg"
-        },
-        {
-          id: "cert2",
-          title: "Advanced Training in Pediatric ENT",
-          institution: "Great Ormond Street Hospital",
-          year: 2012,
-          imageUrl: "/images/certificates/gosh.jpg"
-        }
-      ],
-      procedures: [
-        {
-          id: "proc1",
-          title: "Endoscopic Sinus Surgery",
-          date: new Date("2024-01-15"),
-          description: "Complex case of chronic sinusitis with polyps",
-          mediaUrls: ["/images/procedures/sinus1.jpg", "/images/procedures/sinus2.jpg"],
-          type: "image"
-        },
-        {
-          id: "proc2",
-          title: "Cochlear Implant Procedure",
-          date: new Date("2024-01-10"),
-          description: "Successful cochlear implant in a 5-year-old patient",
-          mediaUrls: ["/videos/procedures/cochlear.mp4"],
-          type: "video"
-        }
-      ]
+      imageUrl: "/images/doctor-profile.jpg"
     };
   }
 );
