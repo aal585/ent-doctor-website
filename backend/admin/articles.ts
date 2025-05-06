@@ -1,7 +1,8 @@
 import { api, APIError } from "encore.dev/api";
 import { doctorDB } from "../doctor/db";
 
-interface CreateArticleParams {
+// Create article
+export const createArticle = api<{
   titleEn: string;
   titleAr: string;
   contentEn: string;
@@ -10,21 +11,21 @@ interface CreateArticleParams {
   summaryAr: string;
   author: string;
   category: string;
-}
-
-// Create article
-export const createArticle = api<CreateArticleParams, { id: string }>(
+}, { success: boolean }>(
   { method: "POST", path: "/admin/articles", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      // Simple validation
-      if (!params.titleEn || !params.titleAr || !params.contentEn || !params.contentAr || 
-          !params.summaryEn || !params.summaryAr || !params.author || !params.category) {
-        throw APIError.invalidArgument("All fields are required");
-      }
+      // Validate all required fields
+      if (!req.titleEn?.trim()) throw APIError.invalidArgument("English title is required");
+      if (!req.titleAr?.trim()) throw APIError.invalidArgument("Arabic title is required");
+      if (!req.contentEn?.trim()) throw APIError.invalidArgument("English content is required");
+      if (!req.contentAr?.trim()) throw APIError.invalidArgument("Arabic content is required");
+      if (!req.summaryEn?.trim()) throw APIError.invalidArgument("English summary is required");
+      if (!req.summaryAr?.trim()) throw APIError.invalidArgument("Arabic summary is required");
+      if (!req.author?.trim()) throw APIError.invalidArgument("Author is required");
+      if (!req.category?.trim()) throw APIError.invalidArgument("Category is required");
 
-      // Insert with minimal fields
-      const result = await doctorDB.queryRow<{ id: number }>`
+      await doctorDB.exec`
         INSERT INTO articles (
           title_en,
           title_ar,
@@ -35,59 +36,72 @@ export const createArticle = api<CreateArticleParams, { id: string }>(
           author,
           category
         ) VALUES (
-          ${params.titleEn},
-          ${params.titleAr},
-          ${params.contentEn},
-          ${params.contentAr},
-          ${params.summaryEn},
-          ${params.summaryAr},
-          ${params.author},
-          ${params.category}
+          ${req.titleEn.trim()},
+          ${req.titleAr.trim()},
+          ${req.contentEn.trim()},
+          ${req.contentAr.trim()},
+          ${req.summaryEn.trim()},
+          ${req.summaryAr.trim()},
+          ${req.author.trim()},
+          ${req.category.trim()}
         )
-        RETURNING id
       `;
 
-      return { id: result?.id?.toString() || '0' };
+      return { success: true };
     } catch (err) {
       console.error("Create article error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to create article");
     }
   }
 );
 
 // Update article
-export const updateArticle = api<CreateArticleParams & { id: string }, { success: boolean }>(
+export const updateArticle = api<{
+  id: string;
+  titleEn: string;
+  titleAr: string;
+  contentEn: string;
+  contentAr: string;
+  summaryEn: string;
+  summaryAr: string;
+  author: string;
+  category: string;
+}, { success: boolean }>(
   { method: "PUT", path: "/admin/articles/:id", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      // Simple validation
-      if (!params.titleEn || !params.titleAr || !params.contentEn || !params.contentAr || 
-          !params.summaryEn || !params.summaryAr || !params.author || !params.category) {
-        throw APIError.invalidArgument("All fields are required");
-      }
+      // Validate all required fields
+      if (!req.titleEn?.trim()) throw APIError.invalidArgument("English title is required");
+      if (!req.titleAr?.trim()) throw APIError.invalidArgument("Arabic title is required");
+      if (!req.contentEn?.trim()) throw APIError.invalidArgument("English content is required");
+      if (!req.contentAr?.trim()) throw APIError.invalidArgument("Arabic content is required");
+      if (!req.summaryEn?.trim()) throw APIError.invalidArgument("English summary is required");
+      if (!req.summaryAr?.trim()) throw APIError.invalidArgument("Arabic summary is required");
+      if (!req.author?.trim()) throw APIError.invalidArgument("Author is required");
+      if (!req.category?.trim()) throw APIError.invalidArgument("Category is required");
 
-      const id = parseInt(params.id);
-      if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid ID");
-      }
+      const id = parseInt(req.id);
+      if (isNaN(id)) throw APIError.invalidArgument("Invalid article ID");
 
       await doctorDB.exec`
         UPDATE articles 
         SET 
-          title_en = ${params.titleEn},
-          title_ar = ${params.titleAr},
-          content_en = ${params.contentEn},
-          content_ar = ${params.contentAr},
-          summary_en = ${params.summaryEn},
-          summary_ar = ${params.summaryAr},
-          author = ${params.author},
-          category = ${params.category}
+          title_en = ${req.titleEn.trim()},
+          title_ar = ${req.titleAr.trim()},
+          content_en = ${req.contentEn.trim()},
+          content_ar = ${req.contentAr.trim()},
+          summary_en = ${req.summaryEn.trim()},
+          summary_ar = ${req.summaryAr.trim()},
+          author = ${req.author.trim()},
+          category = ${req.category.trim()}
         WHERE id = ${id}
       `;
 
       return { success: true };
     } catch (err) {
       console.error("Update article error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to update article");
     }
   }
@@ -96,12 +110,10 @@ export const updateArticle = api<CreateArticleParams & { id: string }, { success
 // Delete article
 export const deleteArticle = api<{ id: string }, { success: boolean }>(
   { method: "DELETE", path: "/admin/articles/:id", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      const id = parseInt(params.id);
-      if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid ID");
-      }
+      const id = parseInt(req.id);
+      if (isNaN(id)) throw APIError.invalidArgument("Invalid article ID");
 
       await doctorDB.exec`
         DELETE FROM articles WHERE id = ${id}
@@ -110,6 +122,7 @@ export const deleteArticle = api<{ id: string }, { success: boolean }>(
       return { success: true };
     } catch (err) {
       console.error("Delete article error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to delete article");
     }
   }

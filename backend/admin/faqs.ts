@@ -1,26 +1,25 @@
 import { api, APIError } from "encore.dev/api";
 import { doctorDB } from "../doctor/db";
 
-interface CreateFAQParams {
+// Create FAQ
+export const createFAQ = api<{
   questionEn: string;
   questionAr: string;
   answerEn: string;
   answerAr: string;
   category: string;
-}
-
-// Create FAQ
-export const createFAQ = api<CreateFAQParams, { id: string }>(
+}, { success: boolean }>(
   { method: "POST", path: "/admin/faqs", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      // Simple validation
-      if (!params.questionEn || !params.questionAr || !params.answerEn || 
-          !params.answerAr || !params.category) {
-        throw APIError.invalidArgument("All fields are required");
-      }
+      // Validate all required fields
+      if (!req.questionEn?.trim()) throw APIError.invalidArgument("English question is required");
+      if (!req.questionAr?.trim()) throw APIError.invalidArgument("Arabic question is required");
+      if (!req.answerEn?.trim()) throw APIError.invalidArgument("English answer is required");
+      if (!req.answerAr?.trim()) throw APIError.invalidArgument("Arabic answer is required");
+      if (!req.category?.trim()) throw APIError.invalidArgument("Category is required");
 
-      const result = await doctorDB.queryRow<{ id: number }>`
+      await doctorDB.exec`
         INSERT INTO faqs (
           question_en,
           question_ar,
@@ -28,53 +27,60 @@ export const createFAQ = api<CreateFAQParams, { id: string }>(
           answer_ar,
           category
         ) VALUES (
-          ${params.questionEn},
-          ${params.questionAr},
-          ${params.answerEn},
-          ${params.answerAr},
-          ${params.category}
+          ${req.questionEn.trim()},
+          ${req.questionAr.trim()},
+          ${req.answerEn.trim()},
+          ${req.answerAr.trim()},
+          ${req.category.trim()}
         )
-        RETURNING id
       `;
 
-      return { id: result?.id?.toString() || '0' };
+      return { success: true };
     } catch (err) {
       console.error("Create FAQ error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to create FAQ");
     }
   }
 );
 
 // Update FAQ
-export const updateFAQ = api<CreateFAQParams & { id: string }, { success: boolean }>(
+export const updateFAQ = api<{
+  id: string;
+  questionEn: string;
+  questionAr: string;
+  answerEn: string;
+  answerAr: string;
+  category: string;
+}, { success: boolean }>(
   { method: "PUT", path: "/admin/faqs/:id", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      // Simple validation
-      if (!params.questionEn || !params.questionAr || !params.answerEn || 
-          !params.answerAr || !params.category) {
-        throw APIError.invalidArgument("All fields are required");
-      }
+      // Validate all required fields
+      if (!req.questionEn?.trim()) throw APIError.invalidArgument("English question is required");
+      if (!req.questionAr?.trim()) throw APIError.invalidArgument("Arabic question is required");
+      if (!req.answerEn?.trim()) throw APIError.invalidArgument("English answer is required");
+      if (!req.answerAr?.trim()) throw APIError.invalidArgument("Arabic answer is required");
+      if (!req.category?.trim()) throw APIError.invalidArgument("Category is required");
 
-      const id = parseInt(params.id);
-      if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid ID");
-      }
+      const id = parseInt(req.id);
+      if (isNaN(id)) throw APIError.invalidArgument("Invalid FAQ ID");
 
       await doctorDB.exec`
         UPDATE faqs 
         SET
-          question_en = ${params.questionEn},
-          question_ar = ${params.questionAr},
-          answer_en = ${params.answerEn},
-          answer_ar = ${params.answerAr},
-          category = ${params.category}
+          question_en = ${req.questionEn.trim()},
+          question_ar = ${req.questionAr.trim()},
+          answer_en = ${req.answerEn.trim()},
+          answer_ar = ${req.answerAr.trim()},
+          category = ${req.category.trim()}
         WHERE id = ${id}
       `;
 
       return { success: true };
     } catch (err) {
       console.error("Update FAQ error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to update FAQ");
     }
   }
@@ -83,12 +89,10 @@ export const updateFAQ = api<CreateFAQParams & { id: string }, { success: boolea
 // Delete FAQ
 export const deleteFAQ = api<{ id: string }, { success: boolean }>(
   { method: "DELETE", path: "/admin/faqs/:id", auth: true },
-  async (params) => {
+  async (req) => {
     try {
-      const id = parseInt(params.id);
-      if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid ID");
-      }
+      const id = parseInt(req.id);
+      if (isNaN(id)) throw APIError.invalidArgument("Invalid FAQ ID");
 
       await doctorDB.exec`
         DELETE FROM faqs WHERE id = ${id}
@@ -97,6 +101,7 @@ export const deleteFAQ = api<{ id: string }, { success: boolean }>(
       return { success: true };
     } catch (err) {
       console.error("Delete FAQ error:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to delete FAQ");
     }
   }
