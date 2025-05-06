@@ -1,4 +1,5 @@
 import { api, APIError } from "encore.dev/api";
+import { doctorDB } from "./db";
 
 // Define the interface locally to avoid import issues
 interface Article {
@@ -19,28 +20,48 @@ interface Article {
 export const getArticles = api<{ lang: "en" | "ar" }, { articles: Article[] }>(
   { method: "GET", path: "/doctor/articles", expose: true },
   async (req) => {
-    if (!["en", "ar"].includes(req.lang)) {
-      throw APIError.invalidArgument("Invalid language specified");
-    }
+    try {
+      if (!["en", "ar"].includes(req.lang)) {
+        throw APIError.invalidArgument("Invalid language specified");
+      }
 
-    // Return sample data for now
-    return {
-      articles: [
-        {
-          id: "1",
-          title: "Understanding ENT Health",
-          content: "Content here...",
-          summary: "A comprehensive guide to ENT health",
-          author: "Dr. Ahmed Sultan",
-          date: new Date(),
-          imageUrl: "/images/articles/ent-health.jpg",
-          tags: ["health", "education"],
-          category: "Education",
-          readTimeMinutes: 5,
-          viewCount: 100
-        }
-      ]
-    };
+      const rows = await doctorDB.queryAll`
+        SELECT 
+          id,
+          title_${req.lang} as title,
+          content_${req.lang} as content,
+          summary_${req.lang} as summary,
+          author,
+          date,
+          image_url,
+          tags,
+          category,
+          read_time_minutes,
+          view_count
+        FROM articles
+        ORDER BY date DESC
+      `;
+
+      const articles = rows.map(row => ({
+        id: row.id.toString(),
+        title: row.title,
+        content: row.content,
+        summary: row.summary,
+        author: row.author,
+        date: new Date(row.date),
+        imageUrl: row.image_url,
+        tags: row.tags,
+        category: row.category,
+        readTimeMinutes: row.read_time_minutes,
+        viewCount: row.view_count
+      }));
+
+      return { articles };
+    } catch (err) {
+      console.error("Failed to fetch articles:", err);
+      if (err instanceof APIError) throw err;
+      throw APIError.internal("Failed to fetch articles");
+    }
   }
 );
 
@@ -48,23 +69,56 @@ export const getArticles = api<{ lang: "en" | "ar" }, { articles: Article[] }>(
 export const getArticle = api<{ id: string; lang: "en" | "ar" }, Article>(
   { method: "GET", path: "/doctor/articles/:id", expose: true },
   async (req) => {
-    if (!["en", "ar"].includes(req.lang)) {
-      throw APIError.invalidArgument("Invalid language specified");
-    }
+    try {
+      if (!["en", "ar"].includes(req.lang)) {
+        throw APIError.invalidArgument("Invalid language specified");
+      }
 
-    // Return sample data for now
-    return {
-      id: req.id,
-      title: "Understanding ENT Health",
-      content: "Content here...",
-      summary: "A comprehensive guide to ENT health",
-      author: "Dr. Ahmed Sultan",
-      date: new Date(),
-      imageUrl: "/images/articles/ent-health.jpg",
-      tags: ["health", "education"],
-      category: "Education",
-      readTimeMinutes: 5,
-      viewCount: 100
-    };
+      const row = await doctorDB.queryRow`
+        SELECT 
+          id,
+          title_${req.lang} as title,
+          content_${req.lang} as content,
+          summary_${req.lang} as summary,
+          author,
+          date,
+          image_url,
+          tags,
+          category,
+          read_time_minutes,
+          view_count
+        FROM articles
+        WHERE id = ${req.id}
+      `;
+
+      if (!row) {
+        throw APIError.notFound("Article not found");
+      }
+
+      // Update view count
+      await doctorDB.exec`
+        UPDATE articles 
+        SET view_count = view_count + 1 
+        WHERE id = ${req.id}
+      `;
+
+      return {
+        id: row.id.toString(),
+        title: row.title,
+        content: row.content,
+        summary: row.summary,
+        author: row.author,
+        date: new Date(row.date),
+        imageUrl: row.image_url,
+        tags: row.tags,
+        category: row.category,
+        readTimeMinutes: row.read_time_minutes,
+        viewCount: row.view_count + 1
+      };
+    } catch (err) {
+      console.error("Failed to fetch article:", err);
+      if (err instanceof APIError) throw err;
+      throw APIError.internal("Failed to fetch article");
+    }
   }
 );

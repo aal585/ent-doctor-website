@@ -38,11 +38,11 @@ export function AppointmentForm() {
         isNewPatient: true
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Failed to submit appointment request:", error);
       toast({
         title: "Error",
-        description: "Failed to submit appointment request. Please try again.",
+        description: error?.message || "Failed to submit appointment request. Please try again.",
         variant: "destructive",
       });
     },
@@ -50,6 +50,60 @@ export function AppointmentForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.patientName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your name",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your email",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!formData.phone.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!formData.reason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your reason for visit",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Ensure dates are in the future
+    const now = new Date();
+    if (new Date(formData.preferredDate) < now) {
+      toast({
+        title: "Error",
+        description: "Preferred date must be in the future",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (new Date(formData.alternateDate) < now) {
+      toast({
+        title: "Error",
+        description: "Alternate date must be in the future",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mutation.mutate(formData);
   };
 
@@ -91,9 +145,10 @@ export function AppointmentForm() {
         <Label htmlFor="preferredDate">Preferred Date</Label>
         <Input
           id="preferredDate"
-          type="date"
-          value={formData.preferredDate.toISOString().split('T')[0]}
+          type="datetime-local"
+          value={formData.preferredDate.toISOString().slice(0, 16)}
           onChange={(e) => setFormData({ ...formData, preferredDate: new Date(e.target.value) })}
+          min={new Date().toISOString().slice(0, 16)}
           required
         />
       </div>
@@ -102,9 +157,10 @@ export function AppointmentForm() {
         <Label htmlFor="alternateDate">Alternate Date</Label>
         <Input
           id="alternateDate"
-          type="date"
-          value={formData.alternateDate.toISOString().split('T')[0]}
+          type="datetime-local"
+          value={formData.alternateDate.toISOString().slice(0, 16)}
           onChange={(e) => setFormData({ ...formData, alternateDate: new Date(e.target.value) })}
+          min={new Date().toISOString().slice(0, 16)}
           required
         />
       </div>
