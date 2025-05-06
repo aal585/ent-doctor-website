@@ -38,11 +38,14 @@ export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
     patientName: "",
     content: "",
     rating: 5,
-    procedureType: "General Consultation"
+    procedureType: ""
   });
 
   const mutation = useMutation({
-    mutationFn: (data: TestimonialFormData) => backend.doctor.submitTestimonial(data),
+    mutationFn: async (data: TestimonialFormData) => {
+      const response = await backend.doctor.submitTestimonial(data);
+      return response;
+    },
     onSuccess: () => {
       toast({
         title: t("testimonials.submitSuccess"),
@@ -72,6 +75,14 @@ export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.procedureType) {
+      toast({
+        title: t("testimonials.submitError"),
+        description: "Please select a procedure type",
+        variant: "destructive",
+      });
+      return;
+    }
     mutation.mutate(formData);
   };
 
@@ -114,6 +125,7 @@ export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
         <Select
           value={formData.procedureType}
           onValueChange={(value) => setFormData({ ...formData, procedureType: value })}
+          required
         >
           <SelectTrigger>
             <SelectValue placeholder={t("testimonials.selectProcedure")} />

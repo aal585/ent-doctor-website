@@ -8,11 +8,7 @@ interface Testimonial {
   rating: number;
   date: Date;
   verified: boolean;
-  procedureType?: string;
-  response?: {
-    content: string;
-    date: Date;
-  };
+  procedureType: string;
 }
 
 interface SubmitTestimonialParams {
@@ -26,65 +22,59 @@ interface SubmitTestimonialParams {
 export const getTestimonials = api<void, { testimonials: Testimonial[] }>(
   { method: "GET", path: "/doctor/testimonials", expose: true },
   async () => {
-    try {
-      const testimonials = await doctorDB.queryAll<Testimonial>`
-        SELECT 
-          id::text,
-          patient_name as "patientName",
-          content,
-          rating,
-          date,
-          verified,
-          procedure_type as "procedureType",
-          response_content as "responseContent",
-          response_date as "responseDate"
-        FROM testimonials
-        ORDER BY date DESC
-      `;
+    const rows = await doctorDB.queryAll`
+      SELECT 
+        id,
+        patient_name,
+        content,
+        rating,
+        date,
+        verified,
+        procedure_type
+      FROM testimonials
+      ORDER BY date DESC
+    `;
 
-      return {
-        testimonials: testimonials.map(t => ({
-          id: t.id,
-          patientName: t.patientName,
-          content: t.content,
-          rating: t.rating,
-          date: t.date,
-          verified: t.verified,
-          procedureType: t.procedureType,
-          response: t.responseContent ? {
-            content: t.responseContent,
-            date: t.responseDate
-          } : undefined
-        }))
-      };
-    } catch (err) {
-      console.error("Failed to fetch testimonials:", err);
-      throw APIError.internal("Failed to fetch testimonials");
-    }
+    const testimonials = rows.map(row => ({
+      id: row.id.toString(),
+      patientName: row.patient_name,
+      content: row.content,
+      rating: Number(row.rating),
+      date: new Date(row.date),
+      verified: Boolean(row.verified),
+      procedureType: row.procedure_type
+    }));
+
+    return { testimonials };
   }
 );
 
 // Submit a new testimonial
-export const submitTestimonial = api<SubmitTestimonialParams, void>(
+export const submitTestimonial = api<SubmitTestimonialParams, { success: boolean }>(
   { method: "POST", path: "/doctor/testimonials", expose: true },
   async (params) => {
-    try {
-      await doctorDB.exec`
-        INSERT INTO testimonials (
-          patient_name,
-          content,
-          rating,
-          procedure_type
-        ) VALUES (
-          ${params.patientName},
-          ${params.content},
-          ${params.rating},
-          ${params.procedureType}
-        )
-      `;
-    } catch (err) {
-      console.error("Failed to submit testimonial:", err);
-      throw APIError.internal("Failed to submit testimonial");
+    if (!params.patientName || !params.content || !params.procedureType) {
+      throw APIError.invalidArgument("Missing required fields");
     }
+
+    if (params.rating < 1 || params.rating > 5) {
+      throw APIError.invalidArgument("Rating must be between 1 and 5");
+    }
+
+    await doctorDB.exec`
+      INSERT INTO testimonials (
+        patient_name,
+        content,
+        rating,
+        procedure_type
+      ) VALUES (
+        ${params.patientName},
+        ${params.content},
+        ${params.rating},
+        ${params.procedureType}
+      )
+    `;
+
+    return { success: true };
   }
 );
