@@ -1,100 +1,33 @@
--- Drop existing tables
-DROP TABLE IF EXISTS testimonials CASCADE;
-DROP TABLE IF EXISTS articles CASCADE;
-DROP TABLE IF EXISTS faqs CASCADE;
-
--- Create testimonials table
-CREATE TABLE testimonials (
-  id BIGSERIAL PRIMARY KEY,
-  patient_name TEXT NOT NULL CHECK (length(trim(patient_name)) > 0),
-  content TEXT NOT NULL CHECK (length(trim(content)) > 0),
-  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  verified BOOLEAN NOT NULL DEFAULT FALSE,
-  procedure_type TEXT NOT NULL CHECK (length(trim(procedure_type)) > 0),
-  response_content TEXT,
-  response_date TIMESTAMP WITH TIME ZONE
-);
-
 -- Create articles table
 CREATE TABLE articles (
-  id BIGSERIAL PRIMARY KEY,
-  title_en TEXT NOT NULL CHECK (length(trim(title_en)) > 0),
-  title_ar TEXT NOT NULL CHECK (length(trim(title_ar)) > 0),
-  content_en TEXT NOT NULL CHECK (length(trim(content_en)) > 0),
-  content_ar TEXT NOT NULL CHECK (length(trim(content_ar)) > 0),
-  summary_en TEXT NOT NULL CHECK (length(trim(summary_en)) > 0),
-  summary_ar TEXT NOT NULL CHECK (length(trim(summary_ar)) > 0),
-  author TEXT NOT NULL CHECK (length(trim(author)) > 0),
+  id SERIAL PRIMARY KEY,
+  title_en TEXT NOT NULL,
+  title_ar TEXT NOT NULL,
+  content_en TEXT NOT NULL,
+  content_ar TEXT NOT NULL,
+  summary_en TEXT NOT NULL,
+  summary_ar TEXT NOT NULL,
+  author TEXT NOT NULL,
   date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_url TEXT NOT NULL CHECK (length(trim(image_url)) > 0),
+  image_url TEXT NOT NULL DEFAULT '/images/articles/default.jpg',
   tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
-  category TEXT NOT NULL CHECK (length(trim(category)) > 0),
+  category TEXT NOT NULL,
   read_time_minutes INTEGER NOT NULL DEFAULT 5,
   view_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- Create faqs table
 CREATE TABLE faqs (
-  id BIGSERIAL PRIMARY KEY,
-  question_en TEXT NOT NULL CHECK (length(trim(question_en)) > 0),
-  question_ar TEXT NOT NULL CHECK (length(trim(question_ar)) > 0),
-  answer_en TEXT NOT NULL CHECK (length(trim(answer_en)) > 0),
-  answer_ar TEXT NOT NULL CHECK (length(trim(answer_ar)) > 0),
-  category TEXT NOT NULL CHECK (length(trim(category)) > 0),
+  id SERIAL PRIMARY KEY,
+  question_en TEXT NOT NULL,
+  question_ar TEXT NOT NULL,
+  answer_en TEXT NOT NULL,
+  answer_ar TEXT NOT NULL,
+  category TEXT NOT NULL,
   icon TEXT NOT NULL DEFAULT 'help-circle'
 );
 
--- Create indexes for better performance
-CREATE INDEX idx_testimonials_date ON testimonials(date DESC);
-CREATE INDEX idx_testimonials_rating ON testimonials(rating);
-CREATE INDEX idx_testimonials_verified ON testimonials(verified);
+-- Create indexes
 CREATE INDEX idx_articles_date ON articles(date DESC);
 CREATE INDEX idx_articles_category ON articles(category);
 CREATE INDEX idx_faqs_category ON faqs(category);
-
--- Insert sample data
-INSERT INTO articles (
-  title_en, title_ar,
-  content_en, content_ar,
-  summary_en, summary_ar,
-  author, image_url, category, tags
-) VALUES (
-  'Understanding Hearing Loss',
-  'فهم فقدان السمع',
-  'Detailed content about hearing loss...',
-  'محتوى مفصل عن فقدان السمع...',
-  'Learn about the causes and treatments of hearing loss',
-  'تعرف على أسباب وعلاجات فقدان السمع',
-  'Dr. Ahmed Sultan',
-  '/images/articles/hearing-loss.jpg',
-  'Patient Education',
-  ARRAY['hearing', 'education']
-);
-
-INSERT INTO faqs (
-  question_en, question_ar,
-  answer_en, answer_ar,
-  category, icon
-) VALUES (
-  'What should I expect during my first visit?',
-  'ماذا يمكن أن أتوقع خلال زيارتي الأولى؟',
-  'During your first visit, we will review your medical history and perform a comprehensive examination.',
-  'خلال زيارتك الأولى، سنراجع تاريخك الطبي ونجري فحصاً شاملاً.',
-  'Appointments',
-  'calendar'
-);
-
-INSERT INTO testimonials (
-  patient_name,
-  content,
-  rating,
-  verified,
-  procedure_type
-) VALUES (
-  'John Smith',
-  'Excellent care and professional service. Highly recommended!',
-  5,
-  true,
-  'Hearing Test'
-);

@@ -1,9 +1,5 @@
 import { api, APIError } from "encore.dev/api";
-import { Bucket } from "encore.dev/storage/objects";
 import { doctorDB } from "../doctor/db";
-
-// Create a bucket for article images
-const articleImages = new Bucket("article-images", { public: true });
 
 interface CreateArticleParams {
   titleEn: string;
@@ -13,14 +9,7 @@ interface CreateArticleParams {
   summaryEn: string;
   summaryAr: string;
   author: string;
-  imageData: string; // Base64 encoded image
-  tags: string[];
   category: string;
-  readTimeMinutes: number;
-}
-
-interface UpdateArticleParams extends CreateArticleParams {
-  id: string;
 }
 
 // Create article
@@ -28,16 +17,13 @@ export const createArticle = api<CreateArticleParams, { id: string }>(
   { method: "POST", path: "/admin/articles", auth: true },
   async (params) => {
     try {
-      // Basic validation
+      // Simple validation
       if (!params.titleEn || !params.titleAr || !params.contentEn || !params.contentAr || 
           !params.summaryEn || !params.summaryAr || !params.author || !params.category) {
-        throw APIError.invalidArgument("All required fields must be provided");
+        throw APIError.invalidArgument("All fields are required");
       }
 
-      // Use default image
-      const imageUrl = "/images/articles/default.jpg";
-
-      // Insert article with minimal fields first
+      // Insert with minimal fields
       const result = await doctorDB.queryRow<{ id: number }>`
         INSERT INTO articles (
           title_en,
@@ -47,7 +33,6 @@ export const createArticle = api<CreateArticleParams, { id: string }>(
           summary_en,
           summary_ar,
           author,
-          image_url,
           category
         ) VALUES (
           ${params.titleEn},
@@ -57,43 +42,36 @@ export const createArticle = api<CreateArticleParams, { id: string }>(
           ${params.summaryEn},
           ${params.summaryAr},
           ${params.author},
-          ${imageUrl},
           ${params.category}
         )
         RETURNING id
       `;
 
-      if (!result?.id) {
-        throw new Error("No ID returned from insert");
-      }
-
-      return { id: result.id.toString() };
+      return { id: result?.id?.toString() || '0' };
     } catch (err) {
       console.error("Create article error:", err);
-      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to create article");
     }
   }
 );
 
 // Update article
-export const updateArticle = api<UpdateArticleParams, { success: boolean }>(
+export const updateArticle = api<CreateArticleParams & { id: string }, { success: boolean }>(
   { method: "PUT", path: "/admin/articles/:id", auth: true },
   async (params) => {
     try {
-      // Basic validation
+      // Simple validation
       if (!params.titleEn || !params.titleAr || !params.contentEn || !params.contentAr || 
           !params.summaryEn || !params.summaryAr || !params.author || !params.category) {
-        throw APIError.invalidArgument("All required fields must be provided");
+        throw APIError.invalidArgument("All fields are required");
       }
 
-      const id = parseInt(params.id, 10);
+      const id = parseInt(params.id);
       if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid article ID");
+        throw APIError.invalidArgument("Invalid ID");
       }
 
-      // Update only essential fields
-      const result = await doctorDB.queryRow<{ id: number }>`
+      await doctorDB.exec`
         UPDATE articles 
         SET 
           title_en = ${params.titleEn},
@@ -105,17 +83,11 @@ export const updateArticle = api<UpdateArticleParams, { success: boolean }>(
           author = ${params.author},
           category = ${params.category}
         WHERE id = ${id}
-        RETURNING id
       `;
-
-      if (!result?.id) {
-        throw APIError.notFound("Article not found");
-      }
 
       return { success: true };
     } catch (err) {
       console.error("Update article error:", err);
-      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to update article");
     }
   }
@@ -126,23 +98,18 @@ export const deleteArticle = api<{ id: string }, { success: boolean }>(
   { method: "DELETE", path: "/admin/articles/:id", auth: true },
   async (params) => {
     try {
-      const id = parseInt(params.id, 10);
+      const id = parseInt(params.id);
       if (isNaN(id)) {
-        throw APIError.invalidArgument("Invalid article ID");
+        throw APIError.invalidArgument("Invalid ID");
       }
 
-      const result = await doctorDB.queryRow<{ id: number }>`
-        DELETE FROM articles WHERE id = ${id} RETURNING id
+      await doctorDB.exec`
+        DELETE FROM articles WHERE id = ${id}
       `;
-
-      if (!result?.id) {
-        throw APIError.notFound("Article not found");
-      }
 
       return { success: true };
     } catch (err) {
       console.error("Delete article error:", err);
-      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to delete article");
     }
   }
