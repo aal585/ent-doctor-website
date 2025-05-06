@@ -1,17 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Star, CheckCircle } from "lucide-react";
 import backend from "~backend/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useLanguage } from "../hooks/useLanguage";
 import { getTranslation } from "../lib/i18n";
+import { TestimonialForm } from "./TestimonialForm";
 import type { Testimonial } from "~backend/doctor/types";
 
 export function Testimonials() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["testimonials"],
     queryFn: () => backend.doctor.getTestimonials()
   });
@@ -87,9 +97,24 @@ export function Testimonials() {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="outline">
-            {language === "ar" ? "شارك تجربتك" : "Share Your Experience"}
-          </Button>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                {t("testimonials.share")}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{t("testimonials.write")}</DialogTitle>
+              </DialogHeader>
+              <TestimonialForm
+                onSuccess={() => {
+                  setIsFormOpen(false);
+                  refetch();
+                }}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </section>

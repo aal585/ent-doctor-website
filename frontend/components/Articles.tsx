@@ -1,15 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useLanguage } from "../hooks/useLanguage";
 import { getTranslation } from "../lib/i18n";
 import backend from "~backend/client";
 import { ArticleCard } from "./ArticleCard";
+import { ArticleView } from "./ArticleView";
 import type { Article } from "~backend/doctor/types";
 
 export function Articles() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["articles", language],
@@ -23,6 +31,10 @@ export function Articles() {
   // Get the latest article for the featured section
   const featuredArticle = data?.articles[0];
   const remainingArticles = data?.articles.slice(1);
+
+  if (selectedArticleId) {
+    return <ArticleView articleId={selectedArticleId} onBack={() => setSelectedArticleId(null)} />;
+  }
 
   return (
     <section id="articles" className="py-20">
@@ -38,7 +50,7 @@ export function Articles() {
 
         {/* Featured Article */}
         {featuredArticle && (
-          <div className="mb-12">
+          <div className="mb-12 cursor-pointer" onClick={() => setSelectedArticleId(featuredArticle.id)}>
             <ArticleCard article={featuredArticle} variant="featured" />
           </div>
         )}
@@ -58,7 +70,13 @@ export function Articles() {
           <TabsContent value="recent" className="m-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {remainingArticles?.map((article: Article) => (
-                <ArticleCard key={article.id} article={article} />
+                <div
+                  key={article.id}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedArticleId(article.id)}
+                >
+                  <ArticleCard article={article} />
+                </div>
               ))}
             </div>
           </TabsContent>
@@ -67,7 +85,13 @@ export function Articles() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {remainingArticles?.sort((a, b) => b.viewCount - a.viewCount)
                 .map((article: Article) => (
-                  <ArticleCard key={article.id} article={article} />
+                  <div
+                    key={article.id}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedArticleId(article.id)}
+                  >
+                    <ArticleCard article={article} />
+                  </div>
                 ))}
             </div>
           </TabsContent>
