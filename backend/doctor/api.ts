@@ -1,13 +1,15 @@
 import { api } from "encore.dev/api";
 
-// Basic test endpoint
-export const test = api<void, { ok: boolean }>(
+// Simple test endpoint
+export const hello = api<void, { message: string }>(
   { 
     method: "GET", 
-    path: "/test", 
+    path: "/hello", 
     expose: true 
   },
   async () => {
-    return { ok: true };
+    return {
+      message: "Hello World"
+    };
   }
 );
