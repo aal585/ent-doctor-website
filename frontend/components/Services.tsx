@@ -2,54 +2,27 @@ import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "../hooks/useLanguage";
 import { getTranslation } from "../lib/i18n";
 import backend from "~backend/client";
-import type { Service } from "~backend/doctor/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+
+interface SimpleService {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+}
 
 export function Services() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
-  const { toast } = useToast();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["services", language],
-    queryFn: () => backend.doctor.listServices({ lang: language }),
-    onError: (error) => {
-      console.error("Failed to fetch services:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load services",
-        variant: "destructive",
-      });
-    }
+    queryFn: () => backend.doctor.listServices({ lang: language })
   });
 
   if (isLoading) {
     return <div className="text-center py-12">Loading...</div>;
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">
-          {t("services.error")}
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => window.location.reload()}
-        >
-          {t("common.retry")}
-        </Button>
-      </div>
-    );
   }
 
   return (
@@ -65,24 +38,21 @@ export function Services() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data?.services.map((service: Service) => (
-            <Card key={service.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+          {data?.services.map((service: SimpleService) => (
+            <Card key={service.id}>
+              <CardHeader className="p-0">
                 <img
                   src={service.imageUrl}
                   alt={service.name}
-                  className="w-full h-48 object-cover rounded-t-lg"
+                  className="w-full h-48 object-cover"
                 />
               </CardHeader>
-              <CardContent>
-                <CardTitle className="mb-2">{service.name}</CardTitle>
-                <CardDescription className="mb-4">{service.description}</CardDescription>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">{service.priceRange}</span>
-                  <Button variant="outline">
-                    {t("services.learnMore")}
-                  </Button>
-                </div>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
+                <p className="text-gray-600 mb-4">{service.description}</p>
+                <Button variant="outline" className="w-full">
+                  {t("services.learnMore")}
+                </Button>
               </CardContent>
             </Card>
           ))}

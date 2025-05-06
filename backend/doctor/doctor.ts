@@ -1,5 +1,14 @@
 import { api } from "encore.dev/api";
-import type { Doctor } from "./types";
+
+// Define the interface locally to avoid import issues
+interface Doctor {
+  name: string;
+  title: string;
+  qualifications: string[];
+  specializations: string[];
+  experience: number;
+  imageUrl: string;
+}
 
 // Get doctor profile information
 export const getProfile = api<void, Doctor>(
