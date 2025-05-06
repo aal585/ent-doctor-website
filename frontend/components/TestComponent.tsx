@@ -4,7 +4,7 @@ import backend from "~backend/client";
 export function TestComponent() {
   const { data, isLoading } = useQuery({
     queryKey: ["test"],
-    queryFn: () => backend.admin.hello()
+    queryFn: () => backend.test.hello()
   });
 
   if (isLoading) {
@@ -12,9 +12,9 @@ export function TestComponent() {
   }
 
   return (
-    <div className="p-4">
-      <h2>Test Response:</h2>
-      <p>{data?.message}</p>
+    <div className="p-4 border rounded-lg shadow-sm">
+      <p className="text-lg font-medium">API Response:</p>
+      <p className="mt-2">{data?.message}</p>
     </div>
   );
 }

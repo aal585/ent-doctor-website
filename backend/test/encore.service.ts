@@ -1,7 +1,7 @@
 import { Service } from "encore.dev/service";
 import { api } from "encore.dev/api";
 
-const service = new Service("admin");
+const service = new Service("test");
 
 export default service;
 
