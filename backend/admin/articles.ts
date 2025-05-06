@@ -12,7 +12,7 @@ export const createArticle = api<{
   author: string;
   category: string;
 }, { success: boolean }>(
-  { method: "POST", path: "/admin/articles", auth: true },
+  { method: "POST", path: "/admin/articles", expose: true },
   async (req) => {
     try {
       // Validate all required fields
@@ -68,7 +68,7 @@ export const updateArticle = api<{
   author: string;
   category: string;
 }, { success: boolean }>(
-  { method: "PUT", path: "/admin/articles/:id", auth: true },
+  { method: "PUT", path: "/admin/articles/:id", expose: true },
   async (req) => {
     try {
       // Validate all required fields
@@ -109,7 +109,7 @@ export const updateArticle = api<{
 
 // Delete article
 export const deleteArticle = api<{ id: string }, { success: boolean }>(
-  { method: "DELETE", path: "/admin/articles/:id", auth: true },
+  { method: "DELETE", path: "/admin/articles/:id", expose: true },
   async (req) => {
     try {
       const id = parseInt(req.id);

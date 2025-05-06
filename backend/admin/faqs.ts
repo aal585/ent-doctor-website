@@ -9,7 +9,7 @@ export const createFAQ = api<{
   answerAr: string;
   category: string;
 }, { success: boolean }>(
-  { method: "POST", path: "/admin/faqs", auth: true },
+  { method: "POST", path: "/admin/faqs", expose: true },
   async (req) => {
     try {
       // Validate all required fields
@@ -53,7 +53,7 @@ export const updateFAQ = api<{
   answerAr: string;
   category: string;
 }, { success: boolean }>(
-  { method: "PUT", path: "/admin/faqs/:id", auth: true },
+  { method: "PUT", path: "/admin/faqs/:id", expose: true },
   async (req) => {
     try {
       // Validate all required fields
@@ -88,7 +88,7 @@ export const updateFAQ = api<{
 
 // Delete FAQ
 export const deleteFAQ = api<{ id: string }, { success: boolean }>(
-  { method: "DELETE", path: "/admin/faqs/:id", auth: true },
+  { method: "DELETE", path: "/admin/faqs/:id", expose: true },
   async (req) => {
     try {
       const id = parseInt(req.id);

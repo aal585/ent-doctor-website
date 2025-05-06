@@ -1,33 +1,22 @@
--- Create articles table
-CREATE TABLE articles (
+-- Create basic articles table
+CREATE TABLE IF NOT EXISTS articles (
   id SERIAL PRIMARY KEY,
-  title_en TEXT NOT NULL,
-  title_ar TEXT NOT NULL,
-  content_en TEXT NOT NULL,
-  content_ar TEXT NOT NULL,
-  summary_en TEXT NOT NULL,
-  summary_ar TEXT NOT NULL,
-  author TEXT NOT NULL,
-  date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_url TEXT NOT NULL DEFAULT '/images/articles/default.jpg',
-  tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
-  category TEXT NOT NULL,
-  read_time_minutes INTEGER NOT NULL DEFAULT 5,
-  view_count INTEGER NOT NULL DEFAULT 0
+  title_en text NOT NULL,
+  title_ar text NOT NULL,
+  content_en text NOT NULL,
+  content_ar text NOT NULL,
+  summary_en text NOT NULL,
+  summary_ar text NOT NULL,
+  author text NOT NULL,
+  category text NOT NULL
 );
 
--- Create faqs table
-CREATE TABLE faqs (
+-- Create basic faqs table
+CREATE TABLE IF NOT EXISTS faqs (
   id SERIAL PRIMARY KEY,
-  question_en TEXT NOT NULL,
-  question_ar TEXT NOT NULL,
-  answer_en TEXT NOT NULL,
-  answer_ar TEXT NOT NULL,
-  category TEXT NOT NULL,
-  icon TEXT NOT NULL DEFAULT 'help-circle'
+  question_en text NOT NULL,
+  question_ar text NOT NULL,
+  answer_en text NOT NULL,
+  answer_ar text NOT NULL,
+  category text NOT NULL
 );
-
--- Create indexes
-CREATE INDEX idx_articles_date ON articles(date DESC);
-CREATE INDEX idx_articles_category ON articles(category);
-CREATE INDEX idx_faqs_category ON faqs(category);
