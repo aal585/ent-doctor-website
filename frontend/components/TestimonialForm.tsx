@@ -22,20 +22,27 @@ interface TestimonialFormProps {
   onCancel?: () => void;
 }
 
+interface TestimonialFormData {
+  patientName: string;
+  content: string;
+  rating: number;
+  procedureType: string;
+}
+
 export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TestimonialFormData>({
     patientName: "",
     content: "",
     rating: 5,
-    procedureType: ""
+    procedureType: "General Consultation"
   });
 
   const mutation = useMutation({
-    mutationFn: () => backend.doctor.submitTestimonial(formData),
+    mutationFn: (data: TestimonialFormData) => backend.doctor.submitTestimonial(data),
     onSuccess: () => {
       toast({
         title: t("testimonials.submitSuccess"),
@@ -54,15 +61,22 @@ export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
   });
 
   const procedures = [
+    "General Consultation",
     "Ear Surgery",
     "Sinus Surgery",
     "Voice Treatment",
     "Sleep Apnea Treatment",
-    "Pediatric ENT"
+    "Pediatric ENT",
+    "Hearing Test"
   ];
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(formData);
+  };
+
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Label htmlFor="patientName">{t("testimonials.name")}</Label>
         <Input
@@ -127,17 +141,17 @@ export function TestimonialForm({ onSuccess, onCancel }: TestimonialFormProps) {
 
       <div className="flex justify-end gap-4">
         {onCancel && (
-          <Button variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             {t("common.cancel")}
           </Button>
         )}
         <Button
-          onClick={() => mutation.mutate()}
+          type="submit"
           disabled={mutation.isPending}
         >
           {mutation.isPending ? t("common.submitting") : t("testimonials.submit")}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }

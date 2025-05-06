@@ -18,6 +18,38 @@ export const translations: Translation = {
   },
   "services.learnMore": { en: "Learn More", ar: "اعرف المزيد" },
 
+  // Testimonials
+  "testimonials.title": { en: "Patient Testimonials", ar: "آراء المرضى" },
+  "testimonials.subtitle": { 
+    en: "See what our patients say about their experience",
+    ar: "اطلع على ما يقوله مرضانا عن تجربتهم"
+  },
+  "testimonials.share": { en: "Share Your Experience", ar: "شارك تجربتك" },
+  "testimonials.write": { en: "Write a Testimonial", ar: "اكتب تقييماً" },
+  "testimonials.verified": { en: "Verified", ar: "موثق" },
+  "testimonials.procedure": { en: "Procedure", ar: "الإجراء" },
+  "testimonials.doctorResponse": { en: "Doctor's Response", ar: "رد الطبيب" },
+  "testimonials.filter": { en: "Filter", ar: "تصفية" },
+  "testimonials.allRatings": { en: "All Ratings", ar: "جميع التقييمات" },
+  "testimonials.onlyRating": { en: "Only", ar: "فقط" },
+  "testimonials.sortDate": { en: "Sort by Date", ar: "ترتيب حسب التاريخ" },
+  "testimonials.sortRating": { en: "Sort by Rating", ar: "ترتيب حسب التقييم" },
+  "testimonials.name": { en: "Your Name", ar: "اسمك" },
+  "testimonials.rating": { en: "Rating", ar: "التقييم" },
+  "testimonials.experience": { en: "Your Experience", ar: "تجربتك" },
+  "testimonials.selectProcedure": { en: "Select Procedure", ar: "اختر الإجراء" },
+  "testimonials.submit": { en: "Submit Testimonial", ar: "إرسال التقييم" },
+  "testimonials.submitSuccess": { en: "Thank You!", ar: "شكراً لك!" },
+  "testimonials.submitSuccessDesc": { 
+    en: "Your testimonial has been submitted successfully",
+    ar: "تم إرسال تقييمك بنجاح"
+  },
+  "testimonials.submitError": { en: "Error", ar: "خطأ" },
+  "testimonials.submitErrorDesc": {
+    en: "Failed to submit testimonial. Please try again.",
+    ar: "فشل إرسال التقييم. يرجى المحاولة مرة أخرى."
+  },
+
   // Common
   "common.loading": { en: "Loading...", ar: "جار التحميل..." },
   "common.error": { en: "Error", ar: "خطأ" },
