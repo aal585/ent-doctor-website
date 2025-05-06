@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 import { getTranslation } from "../lib/i18n";
 import backend from "~backend/client";
-import type { Service, ServiceCategory } from "~backend/doctor/types";
+import type { Service } from "~backend/doctor/types";
 import {
   Card,
   CardContent,
@@ -12,46 +11,31 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { ServiceDetail } from "./ServiceDetail";
 import { useToast } from "@/components/ui/use-toast";
 
 export function Services() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const { toast } = useToast();
 
-  const { data: categories, isError: isCategoriesError } = useQuery({
-    queryKey: ["service-categories", language],
-    queryFn: () => backend.doctor.listServiceCategories({ lang: language }),
-    onError: (error) => {
-      console.error("Failed to fetch categories:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load service categories. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const { data: services, isError: isServicesError } = useQuery({
-    queryKey: ["services", selectedCategory, language],
-    queryFn: () => backend.doctor.listServices({
-      categoryId: selectedCategory,
-      lang: language
-    }),
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["services", language],
+    queryFn: () => backend.doctor.listServices({ lang: language }),
     onError: (error) => {
       console.error("Failed to fetch services:", error);
       toast({
         title: "Error",
-        description: "Failed to load services. Please try again.",
+        description: "Failed to load services",
         variant: "destructive",
       });
     }
   });
 
-  if (isCategoriesError || isServicesError) {
+  if (isLoading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
+
+  if (isError) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600">
@@ -80,51 +64,27 @@ export function Services() {
           </p>
         </div>
 
-        {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <Button
-            variant={selectedCategory === undefined ? "default" : "outline"}
-            onClick={() => setSelectedCategory(undefined)}
-          >
-            {t("services.all")}
-          </Button>
-          {categories?.categories.map((category: ServiceCategory) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-
-        {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services?.services.map((service: Service) => (
-            <Dialog key={service.id}>
-              <DialogTrigger asChild>
-                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <img
-                      src={service.imageUrl}
-                      alt={service.name}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="mb-2">{service.name}</CardTitle>
-                    <CardDescription>{service.description}</CardDescription>
-                    <Button className="mt-4" variant="outline">
-                      {t("services.learnMore")}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl">
-                <ServiceDetail serviceId={service.id} />
-              </DialogContent>
-            </Dialog>
+          {data?.services.map((service: Service) => (
+            <Card key={service.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <img
+                  src={service.imageUrl}
+                  alt={service.name}
+                  className="w-full h-48 object-cover rounded-t-lg"
+                />
+              </CardHeader>
+              <CardContent>
+                <CardTitle className="mb-2">{service.name}</CardTitle>
+                <CardDescription className="mb-4">{service.description}</CardDescription>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">{service.priceRange}</span>
+                  <Button variant="outline">
+                    {t("services.learnMore")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

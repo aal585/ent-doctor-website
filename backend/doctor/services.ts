@@ -1,6 +1,18 @@
 import { api, APIError } from "encore.dev/api";
-import type { Service, ServiceDetail, ServiceCategory } from "./types";
+import type { Service, ServiceCategory } from "./types";
 import { doctorDB } from "./db";
+
+interface ServiceRow {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  priceRange: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryDescription: string | null;
+  categoryIcon: string | null;
+}
 
 // Get service categories
 export const listServiceCategories = api<
@@ -9,16 +21,17 @@ export const listServiceCategories = api<
 >(
   { method: "GET", path: "/doctor/service-categories", expose: true },
   async (req) => {
-    if (!["en", "ar"].includes(req.lang)) {
-      throw APIError.invalidArgument("Invalid language specified");
-    }
-
     try {
+      if (!["en", "ar"].includes(req.lang)) {
+        throw APIError.invalidArgument("Invalid language specified");
+      }
+
+      const langField = req.lang === "en" ? "en" : "ar";
       const rows = await doctorDB.queryAll`
         SELECT 
           id::text,
-          name_${req.lang} as name,
-          description_${req.lang} as description,
+          name_${langField} as name,
+          description_${langField} as description,
           icon
         FROM service_categories 
         ORDER BY id
@@ -27,9 +40,9 @@ export const listServiceCategories = api<
       return {
         categories: rows.map(row => ({
           id: row.id,
-          name: row.name || '',
-          description: row.description || '',
-          icon: row.icon || 'default'
+          name: row.name,
+          description: row.description,
+          icon: row.icon
         }))
       };
     } catch (err) {
@@ -39,46 +52,41 @@ export const listServiceCategories = api<
   }
 );
 
-// Get services by category
+// Get all services
 export const listServices = api<
-  { categoryId?: string; lang: "en" | "ar" },
+  { lang: "en" | "ar" },
   { services: Service[] }
 >(
   { method: "GET", path: "/doctor/services", expose: true },
   async (req) => {
-    if (!["en", "ar"].includes(req.lang)) {
-      throw APIError.invalidArgument("Invalid language specified");
-    }
-
     try {
-      let query = doctorDB.queryAll`
+      if (!["en", "ar"].includes(req.lang)) {
+        throw APIError.invalidArgument("Invalid language specified");
+      }
+
+      const langField = req.lang === "en" ? "en" : "ar";
+      const rows = await doctorDB.queryAll<ServiceRow>`
         SELECT 
-          s.id::text,
-          s.name_${req.lang} as name,
-          s.description_${req.lang} as description,
+          s.id::text as id,
+          s.name_${langField} as name,
+          s.description_${langField} as description,
           s.image_url as "imageUrl",
+          s.price_range as "priceRange",
           c.id::text as "categoryId",
-          c.name_${req.lang} as "categoryName",
-          c.description_${req.lang} as "categoryDescription",
+          c.name_${langField} as "categoryName",
+          c.description_${langField} as "categoryDescription",
           c.icon as "categoryIcon"
         FROM services s
         LEFT JOIN service_categories c ON s.category_id = c.id
       `;
 
-      if (req.categoryId) {
-        query = doctorDB.queryAll`
-          ${query} WHERE c.id = ${req.categoryId}::bigint
-        `;
-      }
-
-      const rows = await query;
-
       return {
         services: rows.map(row => ({
           id: row.id,
-          name: row.name || '',
-          description: row.description || '',
-          imageUrl: row.imageUrl || '',
+          name: row.name,
+          description: row.description,
+          imageUrl: row.imageUrl,
+          priceRange: row.priceRange,
           category: row.categoryId ? {
             id: row.categoryId,
             name: row.categoryName || '',
@@ -94,62 +102,56 @@ export const listServices = api<
   }
 );
 
-// Get detailed service information
-export const getServiceDetail = api<
-  { serviceId: string; lang: "en" | "ar" },
-  ServiceDetail
+// Get service by ID
+export const getService = api<
+  { id: string; lang: "en" | "ar" },
+  Service
 >(
-  { method: "GET", path: "/doctor/services/:serviceId", expose: true },
+  { method: "GET", path: "/doctor/services/:id", expose: true },
   async (req) => {
-    if (!["en", "ar"].includes(req.lang)) {
-      throw APIError.invalidArgument("Invalid language specified");
-    }
-
-    if (!req.serviceId || !/^\d+$/.test(req.serviceId)) {
-      throw APIError.invalidArgument("Invalid service ID");
-    }
-
     try {
-      const service = await doctorDB.queryRow`
+      if (!["en", "ar"].includes(req.lang)) {
+        throw APIError.invalidArgument("Invalid language specified");
+      }
+
+      const langField = req.lang === "en" ? "en" : "ar";
+      const row = await doctorDB.queryRow<ServiceRow>`
         SELECT 
-          id::text,
-          name_${req.lang} as title,
-          description_${req.lang} as description,
-          benefits_${req.lang} as benefits,
-          procedure_steps_${req.lang} as "procedureSteps",
-          recovery_time_${req.lang} as "recoveryTime",
-          preparation_${req.lang} as preparation,
-          risks_${req.lang} as risks,
-          image_url as "imageUrl",
-          video_url as "videoUrl",
-          price_range as "priceRange"
-        FROM services
-        WHERE id = ${req.serviceId}::bigint
+          s.id::text as id,
+          s.name_${langField} as name,
+          s.description_${langField} as description,
+          s.image_url as "imageUrl",
+          s.price_range as "priceRange",
+          c.id::text as "categoryId",
+          c.name_${langField} as "categoryName",
+          c.description_${langField} as "categoryDescription",
+          c.icon as "categoryIcon"
+        FROM services s
+        LEFT JOIN service_categories c ON s.category_id = c.id
+        WHERE s.id = ${req.id}::bigint
       `;
 
-      if (!service) {
+      if (!row) {
         throw APIError.notFound("Service not found");
       }
 
       return {
-        id: service.id,
-        serviceId: service.id,
-        title: service.title || '',
-        description: service.description || '',
-        benefits: service.benefits || [],
-        procedureSteps: service.procedureSteps || [],
-        recoveryTime: service.recoveryTime || '',
-        preparation: service.preparation || [],
-        risks: service.risks || [],
-        imageUrls: [service.imageUrl],
-        videoUrl: service.videoUrl || null,
-        priceRange: service.priceRange || '',
-        results: []
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.imageUrl,
+        priceRange: row.priceRange,
+        category: row.categoryId ? {
+          id: row.categoryId,
+          name: row.categoryName || '',
+          description: row.categoryDescription || '',
+          icon: row.categoryIcon || 'default'
+        } : null
       };
     } catch (err) {
-      console.error("Failed to fetch service detail:", err);
+      console.error("Failed to fetch service:", err);
       if (err instanceof APIError) throw err;
-      throw APIError.internal("Failed to fetch service detail");
+      throw APIError.internal("Failed to fetch service");
     }
   }
 );
