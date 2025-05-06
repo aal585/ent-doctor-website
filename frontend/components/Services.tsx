@@ -14,25 +14,59 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ServiceDetail } from "./ServiceDetail";
+import { useToast } from "@/components/ui/use-toast";
 
 export function Services() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key, language);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [selectedService, setSelectedService] = useState<string | undefined>();
+  const { toast } = useToast();
 
-  const { data: categories } = useQuery({
+  const { data: categories, isError: isCategoriesError } = useQuery({
     queryKey: ["service-categories", language],
-    queryFn: () => backend.doctor.listServiceCategories({ lang: language })
+    queryFn: () => backend.doctor.listServiceCategories({ lang: language }),
+    onError: (error) => {
+      console.error("Failed to fetch categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load service categories. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
-  const { data: services } = useQuery({
+  const { data: services, isError: isServicesError } = useQuery({
     queryKey: ["services", selectedCategory, language],
     queryFn: () => backend.doctor.listServices({
       categoryId: selectedCategory,
       lang: language
-    })
+    }),
+    onError: (error) => {
+      console.error("Failed to fetch services:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load services. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
+
+  if (isCategoriesError || isServicesError) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">
+          {t("services.error")}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          {t("common.retry")}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <section id="services" className="py-20 bg-gray-50">

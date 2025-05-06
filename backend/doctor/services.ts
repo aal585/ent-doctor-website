@@ -10,17 +10,26 @@ export const listServiceCategories = api<
   { method: "GET", path: "/doctor/service-categories", expose: true },
   async (req) => {
     try {
-      const rows = await doctorDB.queryAll`
-        SELECT 
-          id::text,
-          name_${req.lang} as name,
-          description_${req.lang} as description,
-          icon
-        FROM service_categories
-        ORDER BY id
-      `;
+      const nameField = req.lang === "en" ? "name_en" : "name_ar";
+      const descField = req.lang === "en" ? "description_en" : "description_ar";
+      
+      const result = await doctorDB.rawQuery(
+        `SELECT id::text as id, ${nameField} as name, ${descField} as description, icon 
+         FROM service_categories 
+         ORDER BY id`
+      );
 
-      return { categories: rows };
+      const categories = [];
+      for await (const row of result) {
+        categories.push({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          icon: row.icon
+        });
+      }
+
+      return { categories };
     } catch (err) {
       console.error("Failed to fetch service categories:", err);
       throw APIError.internal("Failed to fetch service categories");
@@ -33,46 +42,54 @@ export const listServices = api<
   { categoryId?: string; lang: "en" | "ar" },
   { services: Service[] }
 >(
-  { method: "GET", path: "/doctor/services/list", expose: true },
+  { method: "GET", path: "/doctor/services", expose: true },
   async (req) => {
     try {
-      let query = doctorDB.queryAll`
-        SELECT DISTINCT
-          s.id,
-          s.name_${req.lang} as name,
-          s.description_${req.lang} as description,
+      const nameField = req.lang === "en" ? "name_en" : "name_ar";
+      const descField = req.lang === "en" ? "description_en" : "description_ar";
+      const catNameField = req.lang === "en" ? "c.name_en" : "c.name_ar";
+      const catDescField = req.lang === "en" ? "c.description_en" : "c.description_ar";
+
+      let query = `
+        SELECT 
+          s.id::text as id,
+          s.${nameField} as name,
+          s.${descField} as description,
           s.image_url as "imageUrl",
           c.id::text as "categoryId",
-          c.name_${req.lang} as "categoryName",
-          c.description_${req.lang} as "categoryDescription",
+          ${catNameField} as "categoryName",
+          ${catDescField} as "categoryDescription",
           c.icon as "categoryIcon"
         FROM services s
-        JOIN service_category_mapping m ON s.id = m.service_id
-        JOIN service_categories c ON m.category_id = c.id
+        LEFT JOIN service_category_mapping m ON s.id = m.service_id
+        LEFT JOIN service_categories c ON m.category_id = c.id
       `;
 
+      const params = [];
       if (req.categoryId) {
-        query = doctorDB.queryAll`
-          ${query} WHERE c.id = ${req.categoryId}::bigint
-        `;
+        query += " WHERE c.id = $1";
+        params.push(req.categoryId);
       }
 
-      query = doctorDB.queryAll`${query} ORDER BY s.id`;
+      query += " ORDER BY s.id";
 
-      const rows = await query;
+      const result = await doctorDB.rawQuery(query, ...params);
 
-      const services = rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        imageUrl: row.imageUrl,
-        category: {
-          id: row.categoryId,
-          name: row.categoryName,
-          description: row.categoryDescription,
-          icon: row.categoryIcon
-        }
-      }));
+      const services = [];
+      for await (const row of result) {
+        services.push({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          imageUrl: row.imageUrl,
+          category: {
+            id: row.categoryId,
+            name: row.categoryName,
+            description: row.categoryDescription,
+            icon: row.categoryIcon
+          }
+        });
+      }
 
       return { services };
     } catch (err) {
@@ -87,51 +104,80 @@ export const getServiceDetail = api<
   { serviceId: string; lang: "en" | "ar" },
   ServiceDetail
 >(
-  { method: "GET", path: "/doctor/services/:serviceId/detail", expose: true },
+  { method: "GET", path: "/doctor/services/:serviceId", expose: true },
   async (req) => {
     try {
-      const detail = await doctorDB.queryRow`
-        SELECT
-          id::text,
-          service_id as "serviceId",
-          title_${req.lang} as title,
-          description_${req.lang} as description,
-          benefits_${req.lang} as benefits,
-          procedure_steps_${req.lang} as "procedureSteps",
-          recovery_time_${req.lang} as "recoveryTime",
-          preparation_${req.lang} as preparation,
-          risks_${req.lang} as risks,
-          image_urls as "imageUrls",
-          video_url as "videoUrl",
-          price_range as "priceRange"
-        FROM service_details
-        WHERE service_id = ${req.serviceId}
-      `;
+      const nameField = req.lang === "en" ? "name_en" : "name_ar";
+      const descField = req.lang === "en" ? "description_en" : "description_ar";
+      const benefitsField = req.lang === "en" ? "benefits_en" : "benefits_ar";
+      const stepsField = req.lang === "en" ? "procedure_steps_en" : "procedure_steps_ar";
+      const recoveryField = req.lang === "en" ? "recovery_time_en" : "recovery_time_ar";
+      const prepField = req.lang === "en" ? "preparation_en" : "preparation_ar";
+      const risksField = req.lang === "en" ? "risks_en" : "risks_ar";
 
-      if (!detail) {
+      const service = await doctorDB.queryRow(
+        `SELECT 
+          s.id::text as id,
+          s.${nameField} as name,
+          s.${descField} as description,
+          s.image_url as "imageUrl",
+          COALESCE(d.${benefitsField}, '{}'::text[]) as benefits,
+          COALESCE(d.${stepsField}, '{}'::text[]) as "procedureSteps",
+          COALESCE(d.${recoveryField}, '') as "recoveryTime",
+          COALESCE(d.${prepField}, '{}'::text[]) as preparation,
+          COALESCE(d.${risksField}, '{}'::text[]) as risks,
+          COALESCE(d.image_urls, '{}'::text[]) as "imageUrls",
+          d.video_url as "videoUrl",
+          COALESCE(d.price_range, '') as "priceRange"
+        FROM services s
+        LEFT JOIN service_details d ON s.id = d.service_id
+        WHERE s.id = $1`,
+        req.serviceId
+      );
+
+      if (!service) {
         throw APIError.notFound("Service not found");
       }
 
-      const results = await doctorDB.queryAll`
-        SELECT
-          id::text,
-          service_id as "serviceId",
+      const results = await doctorDB.queryAll(
+        `SELECT 
+          id::text as id,
+          service_id::text as "serviceId",
           before_image_url as "beforeImageUrl",
           after_image_url as "afterImageUrl",
-          description_${req.lang} as description,
+          ${descField} as description,
           procedure_date as "procedureDate"
-        FROM service_results
-        WHERE service_id = ${req.serviceId}
-        ORDER BY procedure_date DESC
-      `;
+        FROM service_results 
+        WHERE service_id = $1 
+        ORDER BY procedure_date DESC`,
+        req.serviceId
+      );
 
       return {
-        ...detail,
-        results
+        id: service.id,
+        serviceId: service.id,
+        title: service.name,
+        description: service.description,
+        benefits: service.benefits || [],
+        procedureSteps: service.procedureSteps || [],
+        recoveryTime: service.recoveryTime || "",
+        preparation: service.preparation || [],
+        risks: service.risks || [],
+        imageUrls: service.imageUrls || [],
+        videoUrl: service.videoUrl,
+        priceRange: service.priceRange || "",
+        results: results.map(r => ({
+          id: r.id,
+          serviceId: r.serviceId,
+          beforeImageUrl: r.beforeImageUrl,
+          afterImageUrl: r.afterImageUrl,
+          description: r.description,
+          procedureDate: new Date(r.procedureDate)
+        }))
       };
     } catch (err) {
-      if (err instanceof APIError) throw err;
       console.error("Failed to fetch service detail:", err);
+      if (err instanceof APIError) throw err;
       throw APIError.internal("Failed to fetch service detail");
     }
   }
